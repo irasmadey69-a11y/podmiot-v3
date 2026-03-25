@@ -1413,82 +1413,58 @@ async function run() {
     }
   }
 
-const context = getOperationalContext(input);
-console.log("PODMIOT CONTEXT:", context);
+  const context = getOperationalContext(input);
+  console.log("PODMIOT CONTEXT:", context);
 
-const safetyGate = buildSafetyGate({ input });
+  const safetyGate = buildSafetyGate({ input });
 
-if (safetyGate.blocked) {
-  const blockedMsg = `Blokada bezpieczeństwa: ${safetyGate.reason}`;
+  if (safetyGate.blocked) {
+    const blockedMsg = `Blokada bezpieczeństwa: ${safetyGate.reason}`;
 
-  if (els.answer) els.answer.textContent = blockedMsg;
-  if (els.meta) {
-    els.meta.textContent = `Mode: ${els.toggleOnline?.checked ? "ONLINE" : "OFFLINE"} | Safety: BLOCKED`;
+    if (els.answer) els.answer.textContent = blockedMsg;
+    if (els.meta) {
+      els.meta.textContent = `Mode: ${els.toggleOnline?.checked ? "ONLINE" : "OFFLINE"} | Safety: BLOCKED`;
+    }
+
+    addJournal("SAFETY_BLOCK", {
+      input,
+      reason: safetyGate.reason,
+      riskLevel: safetyGate.riskLevel
+    });
+
+    saveState(state);
+    renderKpis();
+    return;
   }
 
-  addJournal("SAFETY_BLOCK", {
-    input,
-    reason: safetyGate.reason,
-    riskLevel: safetyGate.riskLevel
+  const nextStep = getNextStepSuggestion({
+    mission: state.mission,
+    commitments: getCommitments() || [],
+    events: getEvents() || [],
+    goalNow: state.identity?.goalNow || ""
   });
 
-  saveState(state);
-  renderKpis();
-  return;
-}
-const nextStep = getNextStepSuggestion({
-  mission: state.mission,
-  commitments: getCommitments() || [],
-  events: getEvents() || [],
-  goalNow: state.identity?.goalNow || ""
-});
+  const route = routeIntent({
+    input,
+    context,
+    safetyGate,
+    nextStep
+  });
 
-const route = routeIntent({
-  input,
-  context,
-  safetyGate,
-  nextStep
-});
+  if (!route || !route.mode) {
+    route.mode = "CONVERSATION";
+  }
 
-if (!route || !route.mode) {
-  route.mode = "CONVERSATION";
-}
+  console.log("PODMIOT ROUTE:", route);
 
-console.log("PODMIOT ROUTE:", route);
+  const autonomy = evaluateAutonomy({
+    context,
+    route,
+    nextStep,
+    safetyGate
+  });
 
-const autonomy = evaluateAutonomy({
-  context,
-  route,
-  nextStep,
-  safetyGate
-});
-
-// =========================
-// LUNI CORE DECISION
-// =========================
-
-let chosenStep = nextStep?.text || "";
-let chosenReason = nextStep?.reason || "";
-
-// jeśli nie ma kroku → fallback
-if (!chosenStep) {
-  chosenStep = "Wybierz jedną małą rzecz, którą możesz zrobić teraz.";
-}
-
-// 🔍 kontrola sensu (to jest Twój „moment zwolnienia”)
-let senseCheck = true;
-
-// prosty warunek – możesz go później rozbudować
-if (!context || !input) {
-  senseCheck = false;
-}
-
-// jeśli coś nie gra → LUNI nie pcha na siłę
-if (!senseCheck) {
-  chosenStep = "Zatrzymajmy się na chwilę i doprecyzujmy sytuację.";
-}
-
-console.log("PODMIOT AUTONOMY:", autonomy);
+  console.log("PODMIOT AUTONOMY:", autonomy);
 
   const decision = await tryDecide(input);
 
@@ -1499,56 +1475,42 @@ console.log("PODMIOT AUTONOMY:", autonomy);
   });
 
   let answerText = "";
+  const normalizedInput = input.toLowerCase();
 
-const normalizedInput = input.toLowerCase();
+  if (
+    normalizedInput.includes("jakie masz funkcje") ||
+    normalizedInput.includes("co możesz") ||
+    normalizedInput.includes("co potrafisz")
+  ) {
+    answerText = "Jestem Luni. Mogę z Tobą rozmawiać, pomóc ustalić następny krok, ogarnąć panel dnia, misję, pamięć, urządzenia i analizę obrazu. Powiedz, czego potrzebujesz teraz.";
+  } else if (
+    normalizedInput.includes("co mam teraz zrobić") ||
+    normalizedInput.includes("jaki następny krok") ||
+    normalizedInput.includes("co teraz")
+  ) {
+    answerText = nextStep?.text || "Najpierw ustal jedną rzecz, którą chcesz ruszyć teraz.";
+  } else if (
+    normalizedInput.includes("mam chaos") ||
+    normalizedInput.includes("nie wiem co robić") ||
+    normalizedInput.includes("stoję w miejscu")
+  ) {
+    answerText = "Masz teraz przeciążenie, nie brak możliwości. Wybierz jedną rzecz, która najbardziej Ci ciąży, i od niej zaczniemy.";
+  } else if (els.toggleOnline?.checked) {
+    const ai = await onlineAnswer(decision, input, hits);
+    console.log("AI RAW:", ai);
+    answerText = ai;
+  } else {
+    answerText = offlineAnswer(decision, input, hits);
+  }
 
-if (
-  normalizedInput.includes("jakie masz funkcje") ||
-  normalizedInput.includes("co możesz") ||
-  normalizedInput.includes("co potrafisz")
-) {
-  answerText = "Jestem Luni. Mogę z Tobą rozmawiać, pomóc ustalić następny krok, ogarnąć panel dnia, misję, pamięć, urządzenia i analizę obrazu. Powiedz, czego potrzebujesz teraz.";
-} else if (
-  normalizedInput.includes("co mam teraz zrobić") ||
-  normalizedInput.includes("jaki następny krok") ||
-  normalizedInput.includes("co teraz")
-) {
-  const next = getNextStepSuggestion({
-    mission: state.mission,
-    commitments: getCommitments() || [],
-    events: getEvents() || [],
-    goalNow: state.identity?.goalNow || ""
-  });
-
-  answerText = next?.text || "Najpierw ustal jedną rzecz, którą chcesz ruszyć teraz.";
-} else if (
-  normalizedInput.includes("mam chaos") ||
-  normalizedInput.includes("nie wiem co robić") ||
-  normalizedInput.includes("stoję w miejscu")
-) {
-  answerText = "Masz teraz przeciążenie, nie brak możliwości. Wybierz jedną rzecz, która najbardziej Ci ciąży, i od niej zaczniemy.";
-} else if (els.toggleOnline?.checked) {
-  answerText = await onlineAnswer(decision, input, hits);
-} else {
-  answerText = offlineAnswer(decision, input, hits);
-}
-
-// LUNI mówi krótko + prowadzi
-answerText = chosenStep;
-
-// opcjonalnie dodaj powód (ale krótko)
-if (chosenReason) {
-  answerText += " " + chosenReason;
-}
-
-if (els.answer) els.answer.textContent = answerText;
-addConversation("assistant", answerText);
-saveState(state);
+  if (els.answer) els.answer.textContent = answerText;
+  addConversation("assistant", answerText);
+  saveState(state);
 
   if (els.meta) {
-  els.meta.textContent =
-    `Mode: ${els.toggleOnline?.checked ? "ONLINE" : "OFFLINE"} | Route: ${route.mode} | Autonomy: ${autonomy.mode} | Audit: ${(state.journal || []).length}`;
-}
+    els.meta.textContent =
+      `Mode: ${els.toggleOnline?.checked ? "ONLINE" : "OFFLINE"} | Route: ${route.mode} | Autonomy: ${autonomy.mode} | Audit: ${(state.journal || []).length}`;
+  }
 
   renderSources(hits);
   renderKpis();
