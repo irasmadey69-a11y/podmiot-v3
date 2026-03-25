@@ -31,14 +31,14 @@ import {
 } from "./core/evolution.js";
 import { sendDeviceAction } from "./modules/devices/devices.js";
 import {
-  loadState as coreLoadState,
-  patchState as corePatchState,
-  resetState as coreResetState
+  patchState as corePatchState
 } from "./core/state.js";
 import { buildContext } from "./core/context.js";
 import { buildSafetyGate } from "./core/safety.js";
 import { routeIntent } from "./core/router.js";
 import { evaluateAutonomy } from "./core/autonomy.js";
+import { LUNI_CORE } from "./core/luniCore.js";
+import { detectIntent } from "./core/understanding.js";
 
 /* =========================
    WAKE WORD ONLY + VOICE LOOP
@@ -58,7 +58,6 @@ let voiceLoop = true;
 let conversationMode = false;
 let speakingNow = false;
 let restartListenTimer = null;
-let state = coreLoadState();
 
 /* =========================
    STATE (profil + audit + misja)
@@ -70,42 +69,45 @@ function nowIso() {
 }
 
 function getSystemName() {
-  return state?.identity?.systemName || "LUNI";
+  const raw = state?.identity?.systemName || "LUNI";
+  if (raw === "LUNI") return "Luni";
+  return raw;
 }
 
 function saveState(s) {
   localStorage.setItem(STATE_KEY, JSON.stringify(s));
 }
+
 function loadState() {
   const raw = localStorage.getItem(STATE_KEY);
   if (!raw) {
     return {
-  identity: {
-    hostName: "Irek",
-    goalNow: "",
-    systemType: "PODMIOT",
-    systemName: "LUNI"
-  },
-  priorities: { coherence: 85, truth: 90, help: 70, like: 40 },
-  relationalCost: 0,
-  journal: [],
-  conversation: [],
-  mission: {
-    text: "",
-    status: "NONE",
-    startedAt: null,
-    elapsedMs: 0,
-    lastTickAt: null
-  },
-  suggestions: [],
-  devices: {
-  selectedCameraId: "",
-  selectedCameraLabel: "",
-  selectedMicId: "",
-  selectedMicLabel: "",
-  externalDeviceState: "unknown"
-},
-};
+      identity: {
+        hostName: "Irek",
+        goalNow: "",
+        systemType: "PODMIOT",
+        systemName: "Luni"
+      },
+      priorities: { coherence: 85, truth: 90, help: 70, like: 40 },
+      relationalCost: 0,
+      journal: [],
+      conversation: [],
+      mission: {
+        text: "",
+        status: "NONE",
+        startedAt: null,
+        elapsedMs: 0,
+        lastTickAt: null
+      },
+      suggestions: [],
+      devices: {
+        selectedCameraId: "",
+        selectedCameraLabel: "",
+        selectedMicId: "",
+        selectedMicLabel: "",
+        externalDeviceState: "unknown"
+      }
+    };
   }
 
   try {
@@ -115,6 +117,9 @@ function loadState() {
     return loadState();
   }
 }
+
+let state = loadState();
+
 function resetState() {
   localStorage.removeItem(STATE_KEY);
 }
@@ -284,6 +289,46 @@ function esc(s) {
   return (s ?? "").toString().replace(/[&<>"']/g, m =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])
   );
+}
+
+function shapeResponse(text) {
+  if (!text) return "";
+
+  let clean = String(text)
+    .replace(/[*•]/g, "")
+    .replace(/^\s*-\s+/gm, "")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+
+  const rawSentences = clean
+    .split(/(?<=[.!?])\s+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  let short = rawSentences
+    .slice(0, LUNI_CORE.style.maxSentences || 3)
+    .join(" ")
+    .trim();
+
+  if (short && !/[.!?]$/.test(short)) {
+    short += ".";
+  }
+
+  return short;
+}
+
+function addNextStep(text) {
+  if (!text) return "";
+
+  const alreadyHasQuestion = text.includes("?");
+  const alreadyHasActionHint =
+    /zrób|zacznij|wybierz|napisz|sprawdź|ustal|wróć|kontynuuj/i.test(text);
+
+  if (alreadyHasQuestion || alreadyHasActionHint) {
+    return text;
+  }
+
+  return text + " Zrób teraz jedną małą rzecz, która ruszy temat do przodu.";
 }
 
 /* =========================
@@ -1276,11 +1321,11 @@ function uiFromState() {
   hostName: "Irek",
   goalNow: "",
   systemType: "PODMIOT",
-  systemName: "LUNI"
+  systemName: "Luni"
 };
 
 if (!state.identity.systemType) state.identity.systemType = "PODMIOT";
-if (!state.identity.systemName) state.identity.systemName = "LUNI";
+if (!state.identity.systemName) state.identity.systemName = "Luni";
 state.devices = state.devices || {
   selectedCameraId: "",
   selectedCameraLabel: "",
@@ -1405,6 +1450,10 @@ const route = routeIntent({
   nextStep
 });
 
+if (!route || !route.mode) {
+  route.mode = "CONVERSATION";
+}
+
 console.log("PODMIOT ROUTE:", route);
 
 const autonomy = evaluateAutonomy({
@@ -1413,6 +1462,31 @@ const autonomy = evaluateAutonomy({
   nextStep,
   safetyGate
 });
+
+// =========================
+// LUNI CORE DECISION
+// =========================
+
+let chosenStep = nextStep?.text || "";
+let chosenReason = nextStep?.reason || "";
+
+// jeśli nie ma kroku → fallback
+if (!chosenStep) {
+  chosenStep = "Wybierz jedną małą rzecz, którą możesz zrobić teraz.";
+}
+
+// 🔍 kontrola sensu (to jest Twój „moment zwolnienia”)
+let senseCheck = true;
+
+// prosty warunek – możesz go później rozbudować
+if (!context || !input) {
+  senseCheck = false;
+}
+
+// jeśli coś nie gra → LUNI nie pcha na siłę
+if (!senseCheck) {
+  chosenStep = "Zatrzymajmy się na chwilę i doprecyzujmy sytuację.";
+}
 
 console.log("PODMIOT AUTONOMY:", autonomy);
 
@@ -1424,19 +1498,52 @@ console.log("PODMIOT AUTONOMY:", autonomy);
     decision: decision?.selected || "?"
   });
 
-  saveState(state);
-
   let answerText = "";
 
-  if (els.toggleOnline?.checked) {
-    answerText = await onlineAnswer(decision, input, hits);
-  } else {
-    answerText = offlineAnswer(decision, input, hits);
-  }
+const normalizedInput = input.toLowerCase();
 
-  if (els.answer) els.answer.textContent = answerText;
-  addConversation("assistant", answerText);
-  saveState(state);
+if (
+  normalizedInput.includes("jakie masz funkcje") ||
+  normalizedInput.includes("co możesz") ||
+  normalizedInput.includes("co potrafisz")
+) {
+  answerText = "Jestem Luni. Mogę z Tobą rozmawiać, pomóc ustalić następny krok, ogarnąć panel dnia, misję, pamięć, urządzenia i analizę obrazu. Powiedz, czego potrzebujesz teraz.";
+} else if (
+  normalizedInput.includes("co mam teraz zrobić") ||
+  normalizedInput.includes("jaki następny krok") ||
+  normalizedInput.includes("co teraz")
+) {
+  const next = getNextStepSuggestion({
+    mission: state.mission,
+    commitments: getCommitments() || [],
+    events: getEvents() || [],
+    goalNow: state.identity?.goalNow || ""
+  });
+
+  answerText = next?.text || "Najpierw ustal jedną rzecz, którą chcesz ruszyć teraz.";
+} else if (
+  normalizedInput.includes("mam chaos") ||
+  normalizedInput.includes("nie wiem co robić") ||
+  normalizedInput.includes("stoję w miejscu")
+) {
+  answerText = "Masz teraz przeciążenie, nie brak możliwości. Wybierz jedną rzecz, która najbardziej Ci ciąży, i od niej zaczniemy.";
+} else if (els.toggleOnline?.checked) {
+  answerText = await onlineAnswer(decision, input, hits);
+} else {
+  answerText = offlineAnswer(decision, input, hits);
+}
+
+// LUNI mówi krótko + prowadzi
+answerText = chosenStep;
+
+// opcjonalnie dodaj powód (ale krótko)
+if (chosenReason) {
+  answerText += " " + chosenReason;
+}
+
+if (els.answer) els.answer.textContent = answerText;
+addConversation("assistant", answerText);
+saveState(state);
 
   if (els.meta) {
   els.meta.textContent =
@@ -1485,7 +1592,8 @@ function showLog() {
 function fullReset() {
   if (!confirm("Na pewno zresetować pamięć PODMIOT (profil + audit + misja)?")) return;
 
-  state = coreResetState();
+  resetState();
+  state = loadState();
   kbCache = null;
 
   if (restartListenTimer) {
