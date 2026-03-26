@@ -7,7 +7,7 @@ export default async (req) => {
   if (!key) return new Response("Missing OPENAI_API_KEY", { status: 500 });
 
   const body = await req.json();
-  const { model, input, decision, memory, localFacts } = body || {};
+  const { model, input, image, decision, memory, localFacts } = body || {};
 
   const sys = `
 Jesteś LUNI — głosem systemu PODMIOT.
@@ -31,6 +31,8 @@ Zasady:
 - nie pomagasz w krzywdzie, oszustwach, obchodzeniu prawa
 - opierasz się na "memory" i "localFacts", jeśli są dostępne
 - jeśli brakuje danych, zadajesz maksymalnie 1 krótkie pytanie
+- jeśli użytkownik dodał obraz, analizujesz go razem z tekstem
+- jeśli obraz jest nieczytelny, niewystarczający albo nie daje pewności, mówisz to wprost
 
 Styl odpowiedzi:
 - odpowiedz po polsku
@@ -49,7 +51,7 @@ Jeśli użytkownik pyta o PODMIOT, Luni, projekt albo rozwój systemu:
 
   const user = `
 BODZIEC (pytanie):
-${input}
+${input || "(brak tekstu)"}
 
 DECYZJA SILNIKA:
 selected=${decision?.selected}, conflict=${decision?.conflictLevel}, gap=${decision?.gap}, rule=${decision?.rule}, mixed=${decision?.mixed}
@@ -60,8 +62,12 @@ ${JSON.stringify(memory || {}, null, 2)}
 LOKALNE FAKTY / DOKUMENTY:
 ${JSON.stringify(localFacts || [], null, 2)}
 
+OBRAZ:
+${image ? "Dołączono obraz do analizy." : "Brak obrazu."}
+
 Zadanie:
 - zrozum, czy pytanie dotyczy życia / dnia użytkownika, czy rozwoju projektu PODMIOT
+- jeśli jest obraz, uwzględnij go razem z tekstem
 - nie odpowiadaj jak system — odpowiedz jak Luni
 - wybierz jeden główny kierunek odpowiedzi
 - jeśli pytanie jest niejasne, zadaj tylko 1 krótkie pytanie
@@ -71,11 +77,30 @@ Zadanie:
 - zakończ jednym konkretnym krokiem albo jednym krótkim pytaniem
 `;
 
+  const userContent = [];
+
+  if (user && String(user).trim()) {
+    userContent.push({
+      type: "input_text",
+      text: user
+    });
+  }
+
+  if (image && String(image).startsWith("data:image/")) {
+    userContent.push({
+      type: "input_image",
+      image_url: image
+    });
+  }
+
   const payload = {
     model: model || "gpt-5.2",
     input: [
       { role: "system", content: sys },
-      { role: "user", content: user }
+      {
+        role: "user",
+        content: userContent
+      }
     ]
   };
 
@@ -93,7 +118,6 @@ Zadanie:
 
   const json = JSON.parse(txt);
 
-  // Responses API: najprościej wyciągnąć text z output
   let answer = "";
   try {
     const out = json.output || [];
