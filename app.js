@@ -1443,9 +1443,12 @@ if (!state.devices.externalDeviceState) {
 ========================= */
 async function run() {
   const input = (els.question?.value || "").trim();
-  if (!input) return;
+const hasImage = !!questionImageDataUrl;
 
-  addConversation("user", input);
+// nic nie rób tylko jeśli NIE ma ani tekstu ani obrazu
+if (!input && !hasImage) return;
+
+  addConversation("user", input || "[image]");
 
   state.identity.hostName =
     (els.hostName?.value || "").trim() ||
