@@ -221,6 +221,13 @@ const els = {
   askBtn: document.getElementById("askBtn"),
   clearBtn: document.getElementById("clearBtn"),
 
+  questionPickBtn: document.getElementById("questionPickBtn"),
+questionClearImageBtn: document.getElementById("questionClearImageBtn"),
+questionFile: document.getElementById("questionFile"),
+questionImageWrap: document.getElementById("questionImageWrap"),
+questionImagePreview: document.getElementById("questionImagePreview"),
+questionImageStatus: document.getElementById("questionImageStatus"),
+
   micBtn: document.getElementById("micBtn"),
   micStatus: document.getElementById("micStatus"),
 
@@ -329,6 +336,53 @@ function addNextStep(text) {
   }
 
   return text + " Zrób teraz jedną małą rzecz, która ruszy temat do przodu.";
+}
+
+/* =========================
+   QUESTION IMAGE INPUT
+========================= */
+let questionImageDataUrl = "";
+
+function clearQuestionImage() {
+  questionImageDataUrl = "";
+
+  if (els.questionFile) els.questionFile.value = "";
+
+  if (els.questionImagePreview) {
+    els.questionImagePreview.src = "";
+  }
+
+  if (els.questionImageWrap) {
+    els.questionImageWrap.style.display = "none";
+  }
+
+  if (els.questionImageStatus) {
+    els.questionImageStatus.textContent = "Brak obrazu";
+  }
+}
+
+function loadQuestionImage(file) {
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    questionImageDataUrl = reader.result || "";
+
+    if (els.questionImagePreview) {
+      els.questionImagePreview.src = questionImageDataUrl;
+    }
+
+    if (els.questionImageWrap) {
+      els.questionImageWrap.style.display = "block";
+    }
+
+    if (els.questionImageStatus) {
+      els.questionImageStatus.textContent = `Obraz gotowy: ${file.name}`;
+    }
+  };
+
+  reader.readAsDataURL(file);
 }
 
 /* =========================
@@ -2027,9 +2081,24 @@ els.btnDeviceOff?.addEventListener("click", deviceOff);
 els.btnTestBridge?.addEventListener("click", testMobileBridge);
 els.btnRefreshMobileState?.addEventListener("click", renderMobileState);
   els.askBtn?.addEventListener("click", run);
-  els.clearBtn?.addEventListener("click", () => {
-    if (els.question) els.question.value = "";
-  });
+
+els.questionPickBtn?.addEventListener("click", () => {
+  els.questionFile?.click();
+});
+
+els.questionFile?.addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    loadQuestionImage(file);
+  }
+});
+
+els.questionClearImageBtn?.addEventListener("click", clearQuestionImage);
+
+els.clearBtn?.addEventListener("click", () => {
+  if (els.question) els.question.value = "";
+  clearQuestionImage();
+});
 
   initMic();
   els.micBtn?.addEventListener("click", toggleMic);
