@@ -703,10 +703,11 @@ async function onlineAnswer(decision, input, localHits) {
   }
 
   const payload = {
-    model,
-    input,
-    decision,
-    memory: {
+  model,
+  input,
+  image: questionImageDataUrl || "",
+  decision,
+  memory: {
       identity: state.identity,
       priorities: state.priorities,
       relationalCost: state.relationalCost,
