@@ -83,6 +83,20 @@
     <section class="card">
       <h2>Pytanie</h2>
       <textarea id="question" rows="4" placeholder="Zadaj pytanie..."></textarea>
+      <div class="row" style="margin-top:10px; gap:8px; display:flex; flex-wrap:wrap;">
+  <button id="questionPickBtn" type="button" class="ghost">Wybierz obraz</button>
+  <button id="questionClearImageBtn" type="button" class="ghost">Usuń obraz</button>
+  <input id="questionFile" type="file" accept="image/*" style="display:none;">
+</div>
+
+<div id="questionImageWrap" style="margin-top:10px; display:none;">
+  <img
+    id="questionImagePreview"
+    alt="Podgląd obrazu"
+    style="max-width:100%; border-radius:12px; border:1px solid #2a2d31;"
+  />
+  <div id="questionImageStatus" class="muted small" style="margin-top:6px;">Brak obrazu</div>
+</div>
 
       <div class="row">
         <button class="ghost" id="micBtn">🎤 Mów</button>
