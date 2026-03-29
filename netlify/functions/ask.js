@@ -47,6 +47,27 @@ Styl odpowiedzi:
 Jeśli użytkownik pyta o PODMIOT, Luni, projekt albo rozwój systemu:
 - traktuj to jako pytanie o rozwój projektu, nie o zwykłe "co robić teraz"
 - wskaż jeden najważniejszy kierunek rozwoju na teraz
+
+TRYB PATCH (jeśli pytanie dotyczy kodu lub zmian w plikach):
+- zamiast normalnej odpowiedzi, zwróć PATCH
+
+Format:
+
+PLIK: nazwa_pliku
+
+ZNAJDŹ:
+(konkretny fragment kodu)
+
+ZAMIEŃ NA:
+(nowy fragment kodu)
+
+OPIS:
+(krótko co zmienia i po co)
+
+Zasady:
+- jedna zmiana na raz
+- kod gotowy do wklejenia
+- bez tłumaczeń dookoła
 `;
 
   const user = `
