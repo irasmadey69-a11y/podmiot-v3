@@ -1443,7 +1443,7 @@ if (!state.devices.externalDeviceState) {
    RUN (ask)
 ========================= */
 async function run() {
-  alert("[run] start", { ts: Date.now() });
+  console.log("[run] start", { ts: Date.now() });
   const input = (els.question?.value || "").trim();
 const hasImage = !!questionImageDataUrl;
 
