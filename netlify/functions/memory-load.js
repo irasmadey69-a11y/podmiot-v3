@@ -1,7 +1,7 @@
 export default async (req) => {
   try {
     const url = "https://rrlzfoulwgykybjbpt.supabase.co/rest/v1/memory";
-    
+
     const res = await fetch(url, {
       method: "GET",
       headers: {
@@ -11,7 +11,29 @@ export default async (req) => {
       }
     });
 
-    const data = await res.json();
+    const text = await res.text();
+
+    if (!res.ok) {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          status: res.status,
+          error: "Supabase response not ok",
+          details: text
+        }),
+        {
+          status: 500,
+          headers: { "content-type": "application/json" }
+        }
+      );
+    }
+
+    let data = [];
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
 
     return new Response(
       JSON.stringify({
@@ -27,7 +49,7 @@ export default async (req) => {
     return new Response(
       JSON.stringify({
         ok: false,
-        error: err.message
+        error: err?.message || "Pobieranie nie powiodło się"
       }),
       {
         status: 500,
