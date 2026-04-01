@@ -1,25 +1,14 @@
-export default async (req) => {
+export default async () => {
   try {
-    const url = "https://rrlzfuolvwgkykjbjbcpt.supabase.co/rest/v1/memory?select=*";
+    const supabaseUrl = "https://rrlzfuolvwgkykjbjbcpt.supabase.co";
+    const key = process.env.SUPABASE_ANON_KEY;
 
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        "apikey": process.env.SUPABASE_ANON_KEY,
-        "Authorization": `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    const text = await res.text();
-
-    if (!res.ok) {
+    if (!key) {
       return new Response(
         JSON.stringify({
           ok: false,
-          status: res.status,
-          error: "Supabase response not ok",
-          details: text
+          stage: "env",
+          error: "Brak SUPABASE_ANON_KEY w Netlify"
         }),
         {
           status: 500,
@@ -28,17 +17,28 @@ export default async (req) => {
       );
     }
 
-    let data = [];
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = text;
-    }
+    const url = `${supabaseUrl}/rest/v1/memory?select=*`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    const text = await res.text();
 
     return new Response(
       JSON.stringify({
-        ok: true,
-        data
+        ok: res.ok,
+        stage: "fetch",
+        status: res.status,
+        url,
+        keyFound: !!key,
+        keyStart: key.slice(0, 12),
+        responseText: text
       }),
       {
         status: 200,
@@ -49,7 +49,8 @@ export default async (req) => {
     return new Response(
       JSON.stringify({
         ok: false,
-        error: err?.message || "fetch failed"
+        stage: "catch",
+        error: err?.message || "unknown error"
       }),
       {
         status: 500,
