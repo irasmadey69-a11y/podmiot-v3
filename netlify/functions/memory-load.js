@@ -1,5 +1,3 @@
-const fetch = require("node-fetch");
-
 exports.handler = async function () {
   try {
     const supabaseUrl = "https://rrlzfuolvwgykybjbcpt.supabase.co";
@@ -41,7 +39,6 @@ exports.handler = async function () {
         data: text
       })
     };
-
   } catch (err) {
     return {
       statusCode: 500,
