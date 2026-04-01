@@ -1,6 +1,6 @@
 export default async (req) => {
   try {
-    const url = "https://rrlzfoulwgykybjbpt.supabase.co/rest/v1/memory";
+    const url = "https://rrlzfuolvwgkykjbjbcpt.supabase.co/rest/v1/memory?select=*";
 
     const res = await fetch(url, {
       method: "GET",
@@ -49,7 +49,7 @@ export default async (req) => {
     return new Response(
       JSON.stringify({
         ok: false,
-        error: err?.message || "Pobieranie nie powiodło się"
+        error: err?.message || "fetch failed"
       }),
       {
         status: 500,
