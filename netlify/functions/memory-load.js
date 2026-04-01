@@ -1,6 +1,6 @@
 export default async () => {
   try {
-    const supabaseUrl = "https://rrlzfuolvwgkykjbjbcpt.supabase.co";
+    const url = "https://rrlzfuolvwgkykjbjbcpt.supabase.co/rest/v1/memory?select=*";
     const key = process.env.SUPABASE_ANON_KEY;
 
     if (!key) {
