@@ -1,6 +1,8 @@
+const fetch = require("node-fetch");
+
 exports.handler = async function () {
   try {
-    const supabaseUrl = "https://rrlzfuolvwgkykjbjbcpt.supabase.co";
+    const supabaseUrl = "https://rrlzfuolvwgykybjbcpt.supabase.co";
     const key = process.env.SUPABASE_ANON_KEY;
 
     if (!key) {
@@ -33,14 +35,13 @@ exports.handler = async function () {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         ok: res.ok,
-        stage: "fetch",
         status: res.status,
         url,
-        keyFound: !!key,
         keyStart: key.slice(0, 12),
-        responseText: text
+        data: text
       })
     };
+
   } catch (err) {
     return {
       statusCode: 500,
@@ -48,7 +49,7 @@ exports.handler = async function () {
       body: JSON.stringify({
         ok: false,
         stage: "catch",
-        error: err?.message || "unknown error"
+        error: err.message
       })
     };
   }
