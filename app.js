@@ -39,6 +39,7 @@ import { routeIntent } from "./core/router.js";
 import { evaluateAutonomy } from "./core/autonomy.js";
 import { LUNI_CORE } from "./core/luniCore.js";
 import { detectIntent } from "./core/understanding.js";
+import { getCalendarContext } from "./tools/calendar.js";
 
 /* =========================
    WAKE WORD ONLY + VOICE LOOP
@@ -1474,6 +1475,9 @@ if (!input && !hasImage) return;
 
   const context = getOperationalContext(input);
   console.log("PODMIOT CONTEXT:", context);
+
+  const calendar = getCalendarContext();
+  console.log("PODMIOT CALENDAR:", calendar);
 
   const safetyGate = buildSafetyGate({ input });
 
