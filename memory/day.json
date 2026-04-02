@@ -1,0 +1,12 @@
+{
+  "mission": {
+    "active": false,
+    "text": "",
+    "startedAt": null,
+    "status": "READY",
+    "elapsedMs": 0,
+    "lastTickAt": null
+  },
+  "events": [],
+  "commitments": []
+}
