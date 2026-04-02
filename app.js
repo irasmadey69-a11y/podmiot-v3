@@ -1464,6 +1464,12 @@ if (!input && !hasImage) return;
     state.identity.goalNow ||
     "";
 
+  const panel = buildDayPanel(state.identity, state.day || {});
+  const suggestions = getDaySuggestions(state.day || {});
+
+  console.log("PODMIOT DAY PANEL:", panel);
+  console.log("PODMIOT DAY SUGGESTIONS:", suggestions);
+
   let hits = [];
   if (!kbCache) kbCache = await tryLoadKB();
   if (kbCache) {
