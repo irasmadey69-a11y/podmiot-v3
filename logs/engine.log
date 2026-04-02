@@ -1,0 +1,12 @@
+[START] PODMIOT ENGINE
+
+[INFO] System uruchomiony
+[INFO] run() → start
+
+[FETCH] memory-load → request wysłany
+[FETCH] memory-load → response odebrany
+
+[STATE] Aktualizacja stanu z memory-load
+[STATE] Stan zapisany w pamięci lokalnej
+
+[END] run() zakończony

@@ -1,0 +1,9 @@
+[START] AUDIT LOG
+
+[QUERY] Użytkownik zadał pytanie
+[ROUTE] Wybrano tryb: GUIDE
+[DECISION] Odpowiedź oparta na stanie pamięci
+
+[NOTE] Brak potwierdzenia świeżości danych z backendu
+
+[END]
