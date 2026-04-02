@@ -39,8 +39,6 @@ import { routeIntent } from "./core/router.js";
 import { evaluateAutonomy } from "./core/autonomy.js";
 import { LUNI_CORE } from "./core/luniCore.js";
 import { detectIntent } from "./core/understanding.js";
-import { buildDayPanel } from "./modules/day/panel.js";
-import { getDaySuggestions } from "./modules/day/suggestions.js";
 
 /* =========================
    WAKE WORD ONLY + VOICE LOOP
@@ -1463,12 +1461,6 @@ if (!input && !hasImage) return;
     (els.goalNow?.value || "").trim() ||
     state.identity.goalNow ||
     "";
-
-  const panel = buildDayPanel(state.identity, state.day || {});
-  const suggestions = getDaySuggestions(state.day || {});
-
-  console.log("PODMIOT DAY PANEL:", panel);
-  console.log("PODMIOT DAY SUGGESTIONS:", suggestions);
 
   let hits = [];
   if (!kbCache) kbCache = await tryLoadKB();
