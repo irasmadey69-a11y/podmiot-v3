@@ -39,6 +39,8 @@ import { routeIntent } from "./core/router.js";
 import { evaluateAutonomy } from "./core/autonomy.js";
 import { LUNI_CORE } from "./core/luniCore.js";
 import { detectIntent } from "./core/understanding.js";
+import { buildDayPanel } from "./modules/day/panel.js";
+import { getDaySuggestions } from "./modules/day/suggestions.js";
 
 /* =========================
    WAKE WORD ONLY + VOICE LOOP
