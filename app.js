@@ -1446,10 +1446,10 @@ if (!state.devices.externalDeviceState) {
 async function run() {
   console.log("[run] start", { ts: Date.now() });
   const input = (els.question?.value || "").trim();
-const hasImage = !!questionImageDataUrl;
+  const hasImage = !!questionImageDataUrl;
 
-// nic nie rób tylko jeśli NIE ma ani tekstu ani obrazu
-if (!input && !hasImage) return;
+  // nic nie rób tylko jeśli NIE ma ani tekstu ani obrazu
+  if (!input && !hasImage) return;
 
   addConversation("user", input || "[image]");
 
@@ -1541,6 +1541,13 @@ if (!input && !hasImage) return;
   const normalizedInput = input.toLowerCase();
 
   if (
+    normalizedInput.includes("test toast") ||
+    normalizedInput.includes("zrób test toast") ||
+    normalizedInput.includes("zrob test toast") ||
+    normalizedInput.includes("uruchom test toast")
+  ) {
+    answerText = "Robię test telefonu. [akcja:toast]";
+  } else if (
     normalizedInput.includes("jakie masz funkcje") ||
     normalizedInput.includes("co możesz") ||
     normalizedInput.includes("co potrafisz")
@@ -1568,6 +1575,23 @@ if (!input && !hasImage) return;
 
   if (els.answer) els.answer.textContent = answerText;
   addConversation("assistant", answerText);
+
+  if (
+    answerText &&
+    answerText.includes("[akcja:toast]") &&
+    typeof window.PodmiotBridge !== "undefined"
+  ) {
+    try {
+      const result = window.PodmiotBridge.runAction(
+        "toast",
+        JSON.stringify({ message: "Toast od Luni" })
+      );
+      console.log("TOAST RESULT:", result);
+    } catch (e) {
+      console.error("TOAST ERROR:", e);
+    }
+  }
+
   saveState(state);
 
   if (els.meta) {
