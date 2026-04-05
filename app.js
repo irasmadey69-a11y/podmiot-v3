@@ -1582,13 +1582,10 @@ async function run() {
     typeof window.PodmiotBridge !== "undefined"
   ) {
     try {
-      const result = window.PodmiotBridge.runAction(
-        "toast",
-        JSON.stringify({ message: "Toast od Luni" })
-      );
-      console.log("TOAST RESULT:", result);
+      const result = window.PodmiotBridge.toast("Toast od Luni");
+      console.log("TOAST DIRECT RESULT:", result);
     } catch (e) {
-      console.error("TOAST ERROR:", e);
+      console.error("TOAST DIRECT ERROR:", e);
     }
   }
 
