@@ -1625,6 +1625,19 @@ async function run() {
   }
   }
 
+  if (
+  answerText &&
+  answerText.includes("[akcja:beep]") &&
+  typeof window.PodmiotBridge !== "undefined"
+) {
+  try {
+    const result = window.PodmiotBridge.beep();
+    console.log("BEEP RESULT:", result);
+  } catch (e) {
+    console.error("BEEP ERROR:", e);
+  }
+  }
+
   saveState(state);
 
   if (els.meta) {
