@@ -1555,9 +1555,16 @@ async function run() {
   normalizedInput.includes("wibruj")
 ) {
   answerText = "Daję sygnał. [akcja:vibrate]";
-} else
-
-  if (
+} else if (
+    normalizedInput.includes("daj dźwięk") ||
+  normalizedInput.includes("daj dzwiek") ||
+  normalizedInput.includes("zrób dźwięk") ||
+  normalizedInput.includes("zrob dzwiek") ||
+  normalizedInput.includes("beep") ||
+  normalizedInput.includes("pik")
+) {
+  answerText = "Daję dźwięk. [akcja:beep]";
+} else if (
     normalizedInput.includes("test toast") ||
     normalizedInput.includes("zrób test toast") ||
     normalizedInput.includes("zrob test toast") ||
