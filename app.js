@@ -1645,6 +1645,19 @@ async function run() {
     console.error("BEEP ERROR:", e);
   }
   }
+  
+  if (
+  answerText &&
+  answerText.includes("[akcja:settings]") &&
+  typeof window.PodmiotBridge !== "undefined"
+) {
+  try {
+    const result = window.PodmiotBridge.openSettings();
+    console.log("SETTINGS RESULT:", result);
+  } catch (e) {
+    console.error("SETTINGS ERROR:", e);
+  }
+  }
 
   saveState(state);
 
