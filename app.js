@@ -1564,6 +1564,14 @@ async function run() {
   normalizedInput.includes("pik")
 ) {
   answerText = "Daję dźwięk. [akcja:beep]";
+    } else if (
+  normalizedInput.includes("otwórz ustawienia") ||
+  normalizedInput.includes("otworz ustawienia") ||
+  normalizedInput.includes("wejdź w ustawienia") ||
+  normalizedInput.includes("wejdz w ustawienia") ||
+  normalizedInput.includes("ustawienia telefonu")
+) {
+  answerText = "Otwieram ustawienia. [akcja:settings]";
 } else if (
     normalizedInput.includes("test toast") ||
     normalizedInput.includes("zrób test toast") ||
