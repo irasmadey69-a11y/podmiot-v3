@@ -1541,6 +1541,23 @@ async function run() {
   const normalizedInput = input.toLowerCase();
 
   if (
+  normalizedInput.includes("daj sygnał") ||
+  normalizedInput.includes("zrób sygnał") ||
+  normalizedInput.includes("zrob sygnal") ||
+  normalizedInput.includes("wykonaj sygnał") ||
+  normalizedInput.includes("wykonaj sygnal") ||
+  normalizedInput.includes("sygnał teraz") ||
+  normalizedInput.includes("sygnal teraz") ||
+  normalizedInput.includes("daj wibrację") ||
+  normalizedInput.includes("daj wibracje") ||
+  normalizedInput.includes("zrób wibrację") ||
+  normalizedInput.includes("zrob wibracje") ||
+  normalizedInput.includes("wibruj")
+) {
+  answerText = "Daję sygnał. [akcja:vibrate]";
+} else
+
+  if (
     normalizedInput.includes("test toast") ||
     normalizedInput.includes("zrób test toast") ||
     normalizedInput.includes("zrob test toast") ||
@@ -1587,6 +1604,18 @@ async function run() {
     } catch (e) {
       console.error("TOAST DIRECT ERROR:", e);
     }
+  }
+  if (
+  answerText &&
+  answerText.includes("[akcja:vibrate]") &&
+  typeof window.PodmiotBridge !== "undefined"
+) {
+  try {
+    const result = window.PodmiotBridge.vibrate();
+    console.log("VIBRATE RESULT:", result);
+  } catch (e) {
+    console.error("VIBRATE ERROR:", e);
+  }
   }
 
   saveState(state);
