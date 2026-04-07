@@ -1572,6 +1572,14 @@ async function run() {
   normalizedInput.includes("ustawienia telefonu")
 ) {
   answerText = "Otwieram ustawienia. [akcja:settings]";
+    } else if (
+  normalizedInput.includes("otwórz wifi") ||
+  normalizedInput.includes("otworz wifi") ||
+  normalizedInput.includes("wifi") ||
+  normalizedInput.includes("wejdź w wifi") ||
+  normalizedInput.includes("wejdz w wifi")
+) {
+  answerText = "Otwieram Wi-Fi. [akcja:wifi]";
 } else if (
     normalizedInput.includes("test toast") ||
     normalizedInput.includes("zrób test toast") ||
@@ -1656,6 +1664,19 @@ async function run() {
     console.log("SETTINGS RESULT:", result);
   } catch (e) {
     console.error("SETTINGS ERROR:", e);
+  }
+  }
+ 
+  if (
+  answerText &&
+  answerText.includes("[akcja:wifi]") &&
+  typeof window.PodmiotBridge !== "undefined"
+) {
+  try {
+    const result = window.PodmiotBridge.openWifiSettings();
+    console.log("WIFI RESULT:", result);
+  } catch (e) {
+    console.error("WIFI ERROR:", e);
   }
   }
 
