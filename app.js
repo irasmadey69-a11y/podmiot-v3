@@ -1440,6 +1440,66 @@ if (!state.devices.externalDeviceState) {
   }
 }
 }
+
+function executeBridgeActionFromAnswer(answerText) {
+  if (!answerText || typeof window.PodmiotBridge === "undefined") return;
+
+  try {
+    if (answerText.includes("[akcja:toast]")) {
+      const result = window.PodmiotBridge.toast("Toast od Luni");
+      console.log("TOAST RESULT:", result);
+    }
+
+    if (answerText.includes("[akcja:vibrate]")) {
+      const result = window.PodmiotBridge.vibrate();
+      console.log("VIBRATE RESULT:", result);
+    }
+
+    if (answerText.includes("[akcja:beep]")) {
+      const result = window.PodmiotBridge.beep();
+      console.log("BEEP RESULT:", result);
+    }
+
+    if (answerText.includes("[akcja:settings]")) {
+      const result = window.PodmiotBridge.openSettings();
+      console.log("SETTINGS RESULT:", result);
+    }
+
+    if (answerText.includes("[akcja:wifi]")) {
+      const result = window.PodmiotBridge.openWifiSettings();
+      console.log("WIFI RESULT:", result);
+    }
+
+    if (answerText.includes("[akcja:bluetooth_settings]")) {
+      const result = window.PodmiotBridge.openBluetoothSettings();
+      console.log("BLUETOOTH SETTINGS RESULT:", result);
+    }
+
+    if (answerText.includes("[akcja:scroll_down]")) {
+      const result = window.PodmiotBridge.scrollDown();
+      console.log("SCROLL DOWN RESULT:", result);
+    }
+
+    if (answerText.includes("[akcja:scroll_up]")) {
+      const result = window.PodmiotBridge.scrollUp();
+      console.log("SCROLL UP RESULT:", result);
+    }
+
+    const prefix = "[akcja:find_click:";
+    if (answerText.includes(prefix)) {
+      const start = answerText.indexOf(prefix) + prefix.length;
+      const end = answerText.indexOf("]", start);
+      const target = answerText.slice(start, end).trim();
+
+      if (target) {
+        const result = window.PodmiotBridge.findAndClick(target);
+        console.log("FIND CLICK RESULT:", result, "TARGET:", target);
+      }
+    }
+  } catch (e) {
+    console.error("BRIDGE ACTION ERROR:", e);
+  }
+}
 /* =========================
    RUN (ask)
 ========================= */
@@ -1538,9 +1598,9 @@ async function run() {
   });
 
   let answerText = "";
-  const normalizedInput = input.toLowerCase();
+const normalizedInput = input.toLowerCase();
 
-  if (
+if (
   normalizedInput.includes("daj sygnał") ||
   normalizedInput.includes("zrób sygnał") ||
   normalizedInput.includes("zrob sygnal") ||
@@ -1556,7 +1616,7 @@ async function run() {
 ) {
   answerText = "Daję sygnał. [akcja:vibrate]";
 } else if (
-    normalizedInput.includes("daj dźwięk") ||
+  normalizedInput.includes("daj dźwięk") ||
   normalizedInput.includes("daj dzwiek") ||
   normalizedInput.includes("zrób dźwięk") ||
   normalizedInput.includes("zrob dzwiek") ||
@@ -1564,7 +1624,7 @@ async function run() {
   normalizedInput.includes("pik")
 ) {
   answerText = "Daję dźwięk. [akcja:beep]";
-    } else if (
+} else if (
   normalizedInput.includes("otwórz ustawienia") ||
   normalizedInput.includes("otworz ustawienia") ||
   normalizedInput.includes("wejdź w ustawienia") ||
@@ -1572,113 +1632,87 @@ async function run() {
   normalizedInput.includes("ustawienia telefonu")
 ) {
   answerText = "Otwieram ustawienia. [akcja:settings]";
-    } else if (
+} else if (
   normalizedInput.includes("otwórz wifi") ||
   normalizedInput.includes("otworz wifi") ||
-  normalizedInput.includes("wifi") ||
+  normalizedInput === "wifi" ||
   normalizedInput.includes("wejdź w wifi") ||
   normalizedInput.includes("wejdz w wifi")
 ) {
   answerText = "Otwieram Wi-Fi. [akcja:wifi]";
 } else if (
-    normalizedInput.includes("test toast") ||
-    normalizedInput.includes("zrób test toast") ||
-    normalizedInput.includes("zrob test toast") ||
-    normalizedInput.includes("uruchom test toast")
-  ) {
-    answerText = "Robię test telefonu. [akcja:toast]";
-  } else if (
-    normalizedInput.includes("jakie masz funkcje") ||
-    normalizedInput.includes("co możesz") ||
-    normalizedInput.includes("co potrafisz")
-  ) {
-    answerText = "Jestem Luni. Mogę z Tobą rozmawiać, pomóc ustalić następny krok, ogarnąć panel dnia, misję, pamięć, urządzenia i analizę obrazu. Powiedz, czego potrzebujesz teraz.";
-  } else if (
-    normalizedInput.includes("co mam teraz zrobić") ||
-    normalizedInput.includes("jaki następny krok") ||
-    normalizedInput.includes("co teraz")
-  ) {
-    answerText = nextStep?.text || "Najpierw ustal jedną rzecz, którą chcesz ruszyć teraz.";
-  } else if (
-    normalizedInput.includes("mam chaos") ||
-    normalizedInput.includes("nie wiem co robić") ||
-    normalizedInput.includes("stoję w miejscu")
-  ) {
-    answerText = "Masz teraz przeciążenie, nie brak możliwości. Wybierz jedną rzecz, która najbardziej Ci ciąży, i od niej zaczniemy.";
-  } else if (els.toggleOnline?.checked) {
-    const ai = await onlineAnswer(decision, input, hits);
-    console.log("AI RAW:", ai);
-    answerText = ai;
-  } else {
-    answerText = offlineAnswer(decision, input, hits);
-  }
+  normalizedInput.includes("otwórz bluetooth") ||
+  normalizedInput.includes("otworz bluetooth") ||
+  normalizedInput.includes("ustawienia bluetooth") ||
+  normalizedInput.includes("wejdź w bluetooth") ||
+  normalizedInput.includes("wejdz w bluetooth")
+) {
+  answerText = "Otwieram Bluetooth. [akcja:bluetooth_settings]";
+} else if (
+  normalizedInput.includes("przewiń w dół") ||
+  normalizedInput.includes("przewin w dol") ||
+  normalizedInput.includes("scroll down")
+) {
+  answerText = "Przewijam w dół. [akcja:scroll_down]";
+} else if (
+  normalizedInput.includes("przewiń w górę") ||
+  normalizedInput.includes("przewin w gore") ||
+  normalizedInput.includes("scroll up")
+) {
+  answerText = "Przewijam w górę. [akcja:scroll_up]";
+} else if (
+  normalizedInput.startsWith("kliknij ") ||
+  normalizedInput.startsWith("naciśnij ") ||
+  normalizedInput.startsWith("nacisnij ") ||
+  normalizedInput.startsWith("znajdź i kliknij ") ||
+  normalizedInput.startsWith("znajdz i kliknij ")
+) {
+  let target = input;
+
+  target = target.replace(/^kliknij\s+/i, "");
+  target = target.replace(/^naciśnij\s+/i, "");
+  target = target.replace(/^nacisnij\s+/i, "");
+  target = target.replace(/^znajdź i kliknij\s+/i, "");
+  target = target.replace(/^znajdz i kliknij\s+/i, "");
+
+  answerText = `Szukam i klikam: ${target}. [akcja:find_click:${target}]`;
+} else if (
+  normalizedInput.includes("test toast") ||
+  normalizedInput.includes("zrób test toast") ||
+  normalizedInput.includes("zrob test toast") ||
+  normalizedInput.includes("uruchom test toast")
+) {
+  answerText = "Robię test telefonu. [akcja:toast]";
+} else if (
+  normalizedInput.includes("jakie masz funkcje") ||
+  normalizedInput.includes("co możesz") ||
+  normalizedInput.includes("co potrafisz")
+) {
+  answerText = "Jestem Luni. Mogę z Tobą rozmawiać, pomóc ustalić następny krok, ogarnąć panel dnia, misję, pamięć, urządzenia i analizę obrazu. Powiedz, czego potrzebujesz teraz.";
+} else if (
+  normalizedInput.includes("co mam teraz zrobić") ||
+  normalizedInput.includes("jaki następny krok") ||
+  normalizedInput.includes("co teraz")
+) {
+  answerText = nextStep?.text || "Najpierw ustal jedną rzecz, którą chcesz ruszyć teraz.";
+} else if (
+  normalizedInput.includes("mam chaos") ||
+  normalizedInput.includes("nie wiem co robić") ||
+  normalizedInput.includes("stoję w miejscu")
+) {
+  answerText = "Masz teraz przeciążenie, nie brak możliwości. Wybierz jedną rzecz, która najbardziej Ci ciąży, i od niej zaczniemy.";
+} else if (els.toggleOnline?.checked) {
+  const ai = await onlineAnswer(decision, input, hits);
+  console.log("AI RAW:", ai);
+  answerText = ai;
+} else {
+  answerText = offlineAnswer(decision, input, hits);
+}
 
   if (els.answer) els.answer.textContent = answerText;
   addConversation("assistant", answerText);
 
-  if (
-    answerText &&
-    answerText.includes("[akcja:toast]") &&
-    typeof window.PodmiotBridge !== "undefined"
-  ) {
-    try {
-      const result = window.PodmiotBridge.toast("Toast od Luni");
-      console.log("TOAST DIRECT RESULT:", result);
-    } catch (e) {
-      console.error("TOAST DIRECT ERROR:", e);
-    }
-  }
-  if (
-  answerText &&
-  answerText.includes("[akcja:vibrate]") &&
-  typeof window.PodmiotBridge !== "undefined"
-) {
-  try {
-    const result = window.PodmiotBridge.vibrate();
-    console.log("VIBRATE RESULT:", result);
-  } catch (e) {
-    console.error("VIBRATE ERROR:", e);
-  }
-  }
-
-  if (
-  answerText &&
-  answerText.includes("[akcja:beep]") &&
-  typeof window.PodmiotBridge !== "undefined"
-) {
-  try {
-    const result = window.PodmiotBridge.beep();
-    console.log("BEEP RESULT:", result);
-  } catch (e) {
-    console.error("BEEP ERROR:", e);
-  }
-  }
-  
-  if (
-  answerText &&
-  answerText.includes("[akcja:settings]") &&
-  typeof window.PodmiotBridge !== "undefined"
-) {
-  try {
-    const result = window.PodmiotBridge.openSettings();
-    console.log("SETTINGS RESULT:", result);
-  } catch (e) {
-    console.error("SETTINGS ERROR:", e);
-  }
-  }
- 
-  if (
-  answerText &&
-  answerText.includes("[akcja:wifi]") &&
-  typeof window.PodmiotBridge !== "undefined"
-) {
-  try {
-    const result = window.PodmiotBridge.openWifiSettings();
-    console.log("WIFI RESULT:", result);
-  } catch (e) {
-    console.error("WIFI ERROR:", e);
-  }
-  }
+  executeBridgeActionFromAnswer(answerText);
 
   saveState(state);
 
